@@ -28,7 +28,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn build -f AuthService
+      run: mvn compile -f AuthService
     - name: run tests
       run: mvn test -f AuthService
 
