@@ -28,7 +28,8 @@ public class MessageParserTest {
                     "sentAt": "2025-07-11T19:30:05.375989",
                     "userId": 1,
                     "chatId": 1
-                }""";
+                }
+                """;
         ChatMessage correct = new ChatMessage("aaa", LocalDateTime.parse("2025-07-11T19:30:05.375989"), 1L, 1L);
 
         ChatMessage result = parser.parse(message);
