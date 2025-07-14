@@ -16,18 +16,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and test
-        uses: docker/build-push-action@v6
+      - name: Set up JDK 21
+        uses: actions/setup-java@v2
         with:
-          context: "{{defaultContext}}:AuthService"
-          load: true
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -f ChatSettingsService
+
+      - name: Build Docker Image
+        run: |
+                    docker build -t AuthService:latest .
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push: true
           target: final
-          tags: ${{ vars.DOCKER_USERNAME }}/${{ github.event.repository.name }}/AuthService:latest
+          tags: ${{ vars.DOCKER_USERNAME }}/AuthService:latest
