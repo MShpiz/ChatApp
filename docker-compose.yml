@@ -1,0 +1,202 @@
+services:
+  chat-database:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=chat-db'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+    expose:
+      - "5433"
+    ports:
+      - '5433:5433'
+    command: -p 5433
+    networks:
+      - message-network
+  chat-liquibase:
+    image: liquibase/liquibase
+    container_name: chat-migrations
+    networks:
+      - message-network
+    depends_on:
+      - chat-database
+    volumes:
+      - ./migrations/chat-migrations:/changesets
+    command:
+      - --searchPath=/changesets
+      - --changelog-file=master.xml
+      - --driver=org.postgresql.Driver
+      - --url=jdbc:postgresql://chat-database:5433/chat-db
+      - --username=postgres
+      - --password=postgres
+      - update
+  history-database:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=history-db'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5432'
+    networks:
+      - message-network
+  liquibase:
+    image: liquibase/liquibase
+    container_name: history-migrations
+    depends_on:
+      - history-database
+    volumes:
+      - ./migrations/history-migrations:/changesets
+    command:
+      - --searchPath=/changesets
+      - --changelog-file=master.xml
+      - --driver=org.postgresql.Driver
+      - --url=jdbc:postgresql://history-database:5432/history-db
+      - --username=postgres
+      - --password=postgres
+      - update
+    networks:
+      - message-network
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - message-network
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "19092:9092"
+    networks:
+      - message-network
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092, DOCKER://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_MIN_IN_SYNC_REPLICAS: 1
+    volumes:
+      - ./kafka-vol:/kafka-message-vol
+
+  message-receiving-service:
+    image: openjdk:21
+    container_name: message-receiving-service
+    working_dir: /app
+    volumes:
+      - ./MessageRecievingService/target/MessageRecievingService-0.0.1-SNAPSHOT.jar:/app/MessageRecievingService-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8080:8080"
+    networks:
+      - message-network
+    depends_on:
+      - kafka
+    links:
+      - kafka:kafka
+    command: [ "java", "-jar", "MessageRecievingService-0.0.1-SNAPSHOT.jar" ]
+
+  message-sending-service:
+    image: openjdk:21
+    container_name: message-sending-service
+    working_dir: /app
+    volumes:
+      - ./MessageSendingService/target/MessageSendingService-0.0.1-SNAPSHOT.jar:/app/MessageSendingService-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8081:8081"
+    networks:
+      - message-network
+    depends_on:
+      - kafka
+      - message-receiving-service
+    links:
+      - kafka:kafka
+    command: [ "java", "-jar", "MessageSendingService-0.0.1-SNAPSHOT.jar" ]
+
+  history-service:
+    image: openjdk:21
+    container_name: history-service
+    working_dir: /app
+    volumes:
+      - ./HistoryService/target/HistoryService-0.0.1-SNAPSHOT.jar:/app/HistoryService-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8082:8082"
+    networks:
+      - message-network
+    depends_on:
+      - kafka
+      - message-receiving-service
+      - liquibase
+    links:
+      - kafka:kafka
+    command: [ "java", "-jar", "HistoryService-0.0.1-SNAPSHOT.jar" ]
+
+  chat-settings-service:
+    image: openjdk:21
+    container_name: chat-settings-service
+    working_dir: /app
+    volumes:
+      - ./ChatSettingsService/target/ChatSettingsService-0.0.1-SNAPSHOT.jar:/app/ChatSettingsService-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8083:8083"
+    networks:
+      - message-network
+    depends_on:
+      - chat-liquibase
+    command: [ "java", "-jar", "ChatSettingsService-0.0.1-SNAPSHOT.jar" ]
+
+  auth-database:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=auth-db'
+      - 'POSTGRES_PASSWORD=auth'
+      - 'POSTGRES_USER=auth'
+    ports:
+      - '5434'
+    expose:
+      - "5434"
+    command: -p 5434
+    networks:
+      - message-network
+  auth-liquibase:
+    image: liquibase/liquibase
+    container_name: auth_migrations
+    networks:
+      - message-network
+    depends_on:
+      - auth-database
+    volumes:
+      - ./migrations/auth-migrations:/changesets
+    command:
+      - --searchPath=/changesets
+      - --changelog-file=master.xml
+      - --driver=org.postgresql.Driver
+      - --url=jdbc:postgresql://auth-database:5434/auth-db
+      - --username=auth
+      - --password=auth
+      - update
+  auth-service:
+    image: openjdk:21
+    container_name: auth-service
+    working_dir: /app
+    volumes:
+      - ./AuthService/target/AuthService-0.0.1-SNAPSHOT.jar:/app/AuthService-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8084:8084"
+    networks:
+      - message-network
+    depends_on:
+      - auth-liquibase
+    command: [ "java", "-jar", "AuthService-0.0.1-SNAPSHOT.jar" ]
+
+networks:
+  message-network:
+    driver: bridge
