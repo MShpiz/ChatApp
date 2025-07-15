@@ -102,13 +102,13 @@ jobs:
 
       - name: Build Docker Image
         run: |
-                    cd ./HistoryService‎
+                    cd ./HistoryService
                     docker build -t chat-history-service:latest .
                     cd ../
 
       - name: Push Docker Image
         run: |
-          cd ./HistoryService‎
+          cd ./HistoryService
           docker tag chat-history-service:latest ${{ secrets.DOCKER_USERNAME }}/chat-setting-service:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/chat-history-service:latest   
           cd ../
