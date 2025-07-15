@@ -36,6 +36,6 @@ jobs:
       - name: Push Docker Image
         run: |
           cd ./AuthService
-          docker tag my-app:latest ${{ secrets.DOCKER_USERNAME }}/authservice:latest
+          docker tag authservice:latest ${{ secrets.DOCKER_USERNAME }}/authservice:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/authservice:latest   
           cd ../
