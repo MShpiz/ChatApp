@@ -1,8 +1,8 @@
 name: Publish Docker image
 
 on:
-  push:
-    branches: [ "docker-upload"]
+  pull_request:
+    branches: [ "master"]
 
 jobs:
   upload-AuthService:
