@@ -172,7 +172,7 @@ jobs:
       - name: Build Docker Image
         run: |
                     cd ./MessageSendingService
-                    docker build -t message-sending-service:latest
+                    docker build -t message-sending-service:latest .
                     cd ../
 
       - name: Push Docker Image
