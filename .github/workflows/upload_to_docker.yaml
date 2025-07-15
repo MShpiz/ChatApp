@@ -33,9 +33,9 @@ jobs:
                     docker build -t authservice:latest .
                     cd ../
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          target: final
-          tags: ${{ vars.DOCKER_USERNAME }}/AuthService:latest
+      - name: Push Docker Image
+        run: |
+          cd ./AuthService
+          docker tag my-app:latest ${{ secrets.DOCKER_USERNAME }}/authservice:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/authservice:latest   
+          cd ../
