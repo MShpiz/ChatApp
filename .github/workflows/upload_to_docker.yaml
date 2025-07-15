@@ -109,8 +109,8 @@ jobs:
       - name: Push Docker Image
         run: |
           cd ./HistoryService
-          docker tag chat-history-service:latest ${{ secrets.DOCKER_USERNAME }}/chat-setting-service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/chat-history-service:latest   
+          docker tag chat-history-service:latest ${{ secrets.DOCKER_USERNAME }}/chat-history-service:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/chat-history-service:latest
           cd ../
           
   upload-MessageRecievingService:
@@ -145,7 +145,7 @@ jobs:
         run: |
           cd ./MessageRecievingService‎
           docker tag message-receiving-service:latest ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest   
+          docker push ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest  
           cd ../
   upload-MessageSendingService:
     runs-on: ubuntu-latest
