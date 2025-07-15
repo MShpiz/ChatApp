@@ -137,15 +137,15 @@ jobs:
 
       - name: Build Docker Image
         run: |
-                    cd ./MessageRecievingService‎
+                    cd ./MessageRecievingService
                     docker build -t message-receiving-service:latest .
                     cd ../
 
       - name: Push Docker Image
         run: |
-          cd ./MessageRecievingService‎
+          cd ./MessageRecievingService
           docker tag message-receiving-service:latest ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest  
+          docker push ${{ secrets.DOCKER_USERNAME }}/message-receiving-service:latest
           cd ../
   upload-MessageSendingService:
     runs-on: ubuntu-latest
@@ -171,13 +171,13 @@ jobs:
 
       - name: Build Docker Image
         run: |
-                    cd ./MessageSendingService‎
-                    docker build -t message-sending-service:latest .
+                    cd ./MessageSendingService
+                    docker build -t message-sending-service:latest
                     cd ../
 
       - name: Push Docker Image
         run: |
-          cd ./MessageSendingService‎
+          cd ./MessageSendingService
           docker tag message-sending-service:latest ${{ secrets.DOCKER_USERNAME }}/message-sending-service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/message-sending-service:latest   
+          docker push ${{ secrets.DOCKER_USERNAME }}/message-sending-service:latest 
           cd ../
