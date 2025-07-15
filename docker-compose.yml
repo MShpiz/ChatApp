@@ -88,71 +88,6 @@ services:
     volumes:
       - ./kafka-vol:/kafka-message-vol
 
-  message-receiving-service:
-    image: openjdk:21
-    container_name: message-receiving-service
-    working_dir: /app
-    volumes:
-      - ./MessageRecievingService/target/MessageRecievingService-0.0.1-SNAPSHOT.jar:/app/MessageRecievingService-0.0.1-SNAPSHOT.jar
-    ports:
-      - "8080:8080"
-    networks:
-      - message-network
-    depends_on:
-      - kafka
-    links:
-      - kafka:kafka
-    command: [ "java", "-jar", "MessageRecievingService-0.0.1-SNAPSHOT.jar" ]
-
-  message-sending-service:
-    image: openjdk:21
-    container_name: message-sending-service
-    working_dir: /app
-    volumes:
-      - ./MessageSendingService/target/MessageSendingService-0.0.1-SNAPSHOT.jar:/app/MessageSendingService-0.0.1-SNAPSHOT.jar
-    ports:
-      - "8081:8081"
-    networks:
-      - message-network
-    depends_on:
-      - kafka
-      - message-receiving-service
-    links:
-      - kafka:kafka
-    command: [ "java", "-jar", "MessageSendingService-0.0.1-SNAPSHOT.jar" ]
-
-  history-service:
-    image: openjdk:21
-    container_name: history-service
-    working_dir: /app
-    volumes:
-      - ./HistoryService/target/HistoryService-0.0.1-SNAPSHOT.jar:/app/HistoryService-0.0.1-SNAPSHOT.jar
-    ports:
-      - "8082:8082"
-    networks:
-      - message-network
-    depends_on:
-      - kafka
-      - message-receiving-service
-      - liquibase
-    links:
-      - kafka:kafka
-    command: [ "java", "-jar", "HistoryService-0.0.1-SNAPSHOT.jar" ]
-
-  chat-settings-service:
-    image: openjdk:21
-    container_name: chat-settings-service
-    working_dir: /app
-    volumes:
-      - ./ChatSettingsService/target/ChatSettingsService-0.0.1-SNAPSHOT.jar:/app/ChatSettingsService-0.0.1-SNAPSHOT.jar
-    ports:
-      - "8083:8083"
-    networks:
-      - message-network
-    depends_on:
-      - chat-liquibase
-    command: [ "java", "-jar", "ChatSettingsService-0.0.1-SNAPSHOT.jar" ]
-
   auth-database:
     image: 'postgres:latest'
     environment:
@@ -183,19 +118,141 @@ services:
       - --username=auth
       - --password=auth
       - update
+  message-receiving-service:
+      image: mshpiz/message-receiving-service:latest
+      container_name: message-receiving-service
+      ports:
+        - "8080:8080"
+      networks:
+        - message-network
+      depends_on:
+        - kafka
+      links:
+        - kafka:kafka
+  message-sending-service:
+    image: mshpiz/message-sending-service
+    container_name: message-sending-service
+    ports:
+      - "8081:8081"
+    networks:
+      - message-network
+    depends_on:
+      - kafka
+      - message-receiving-service
+    links:
+      - kafka:kafka
+
+  history-service:
+    image: mshpiz/chat-history-service
+    container_name: history-service
+    ports:
+      - "8082:8082"
+    networks:
+      - message-network
+    depends_on:
+      - kafka
+      - message-receiving-service
+      - liquibase
+    links:
+      - kafka:kafka
+
+  chat-settings-service:
+    image: mshpiz/chat-setting-service
+    container_name: chat-settings-service
+    ports:
+      - "8083:8083"
+    networks:
+      - message-network
+    depends_on:
+      - chat-liquibase
   auth-service:
-    image: openjdk:21
+    image: mshpiz/authservice
     container_name: auth-service
-    working_dir: /app
-    volumes:
-      - ./AuthService/target/AuthService-0.0.1-SNAPSHOT.jar:/app/AuthService-0.0.1-SNAPSHOT.jar
     ports:
       - "8084:8084"
     networks:
       - message-network
     depends_on:
       - auth-liquibase
-    command: [ "java", "-jar", "AuthService-0.0.1-SNAPSHOT.jar" ]
+
+# запуск локально скомпилированных проектов
+#  message-receiving-service-local:
+#    image: openjdk:21
+#    container_name: message-receiving-service-local
+#    working_dir: /app
+#    volumes:
+#      - ./MessageRecievingService/target/MessageRecievingService-0.0.1-SNAPSHOT.jar:/app/MessageRecievingService-0.0.1-SNAPSHOT.jar
+#    ports:
+#      - "8081:8080"
+#    networks:
+#      - message-network
+#    depends_on:
+#      - kafka
+#    links:
+#      - kafka:kafka
+#    command: [ "java", "-jar", "MessageRecievingService-0.0.1-SNAPSHOT.jar" ]
+#
+#  message-sending-service:
+#    image: openjdk:21
+#    container_name: message-sending-service
+#    working_dir: /app
+#    volumes:
+#      - ./MessageSendingService/target/MessageSendingService-0.0.1-SNAPSHOT.jar:/app/MessageSendingService-0.0.1-SNAPSHOT.jar
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - message-network
+#    depends_on:
+#      - kafka
+#      - message-receiving-service
+#    links:
+#      - kafka:kafka
+#    command: [ "java", "-jar", "MessageSendingService-0.0.1-SNAPSHOT.jar" ]
+#
+#  history-service:
+#    image: openjdk:21
+#    container_name: history-service
+#    working_dir: /app
+#    volumes:
+#      - ./HistoryService/target/HistoryService-0.0.1-SNAPSHOT.jar:/app/HistoryService-0.0.1-SNAPSHOT.jar
+#    ports:
+#      - "8082:8082"
+#    networks:
+#      - message-network
+#    depends_on:
+#      - kafka
+#      - message-receiving-service
+#      - liquibase
+#    links:
+#      - kafka:kafka
+#    command: [ "java", "-jar", "HistoryService-0.0.1-SNAPSHOT.jar" ]
+#
+#  chat-settings-service:
+#    image: openjdk:21
+#    container_name: chat-settings-service
+#    working_dir: /app
+#    volumes:
+#      - ./ChatSettingsService/target/ChatSettingsService-0.0.1-SNAPSHOT.jar:/app/ChatSettingsService-0.0.1-SNAPSHOT.jar
+#    ports:
+#      - "8083:8083"
+#    networks:
+#      - message-network
+#    depends_on:
+#      - chat-liquibase
+#    command: [ "java", "-jar", "ChatSettingsService-0.0.1-SNAPSHOT.jar" ]
+#  auth-service-local:
+#    image: openjdk:21
+#    container_name: auth-service-local
+#    working_dir: /app
+#    volumes:
+#      - ./AuthService/target/AuthService-0.0.1-SNAPSHOT.jar:/app/AuthService-0.0.1-SNAPSHOT.jar
+#    ports:
+#      - "8085:8084"
+#    networks:
+#      - message-network
+#    depends_on:
+#      - auth-liquibase
+#    command: [ "java", "-jar", "AuthService-0.0.1-SNAPSHOT.jar" ]
 
 networks:
   message-network:
