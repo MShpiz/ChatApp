@@ -29,7 +29,9 @@ jobs:
 
       - name: Build Docker Image
         run: |
+                    cd ./AuthService
                     docker build -t authservice:latest .
+                    cd ../
 
       - name: Build and push
         uses: docker/build-push-action@v6
