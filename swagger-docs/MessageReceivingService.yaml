@@ -1,0 +1,63 @@
+basePath: /
+definitions:
+ 
+  model.Message:
+    properties:
+      text:
+        type: string
+      sentAt:
+        type: string
+      userId:
+        type: integer
+        format: int64
+      chatId:
+        type: integer
+        format: int64
+    type: object
+ 
+  
+host: localhost:8080
+info:
+  title: MessageReceivingService API 
+  version: "1.0"
+paths:
+  /send:
+    get:
+      summary: Это не Get запрос, а запрос подключения к WebSocket
+      description:
+        "Это не Get запрос, а запрос подключения к WebSocket"
+      security:
+        - BearerAuth: []
+      tags:
+      - Send messages
+      responses:
+        200:
+          description: Successful response
+    post:
+      summary: Отправка сообщения через WS
+      description:
+        "Отправка сообщения через WS"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Successful response
+          
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/model.Message"
+      tags:
+      - Send messages
+    
+schemes:
+- ws
+securityDefinitions:
+  BearerAuth:
+    description: JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
